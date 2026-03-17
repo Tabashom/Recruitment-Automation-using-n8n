@@ -1,0 +1,76 @@
+{
+  "name": "Recruitment Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            { "mode": "everyMinute" }
+          ]
+        },
+        "documentId": { "value": "<YOUR_SPREADSHEET_ID>", "mode": "list" },
+        "sheetName": { "value": "<YOUR_SHEET_GID>", "mode": "list" },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [-160, 0],
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "<YOUR_GOOGLE_SHEETS_CREDENTIAL_ID>",
+          "name": "<YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node - JavaScript\nreturn items.map(item => {\n  const row = item.json;\n  return { json: {\n    fullName: row['Full Name?'] || '',\n    education: row['Educational status?'] || '',\n    email: row['Email'] || '',\n    resumeLink: row['Resume'] || ''\n  }};\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [112, 0],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "<RECRUITER_EMAIL>",
+        "subject": "New Candidate Submission",
+        "message": "<p><strong>Name:</strong> {{$json[\"fullName\"]}}</p><p><strong>Email:</strong> {{$json[\"email\"]}}</p><p><strong>Education:</strong> {{$json[\"education\"]}}</p><p><strong>Resume:</strong> <a href=\"{{$json[\"resumeLink\"]}}\">View Resume</a></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [320, 0],
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "<YOUR_GMAIL_CREDENTIAL_ID>",
+          "name": "<YOUR_GMAIL_CREDENTIAL_NAME>"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          { "node": "Code in JavaScript", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          { "node": "Send a message", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
